@@ -23,10 +23,18 @@ jobs:
           docker compose up -d --wait
           docker compose exec -T nginx nginx -t
           bash scripts/smoke_test.sh
-          curl --fail http://localhost:8080/ocr/online
+          status=$(curl -s -o /tmp/ocr-probe.json -w '%{http_code}' -H 'Content-Type: application/json' -d '{"case_id":"route-probe","image_ref":"badscan.jpg"}' http://localhost:8080/ocr/parse)
+          test "$status" = 422
+          python -c "import json; assert 'scan quality' in json.load(open('/tmp/ocr-probe.json'))['error']"
           status=$(head -c 6500000 /dev/zero | curl -s -o /dev/null -w '%{http_code}' --data-binary @- http://localhost:8080/api/batches)
           test "$status" = 413
-          bash scripts/backup.sh
+          for index in $(seq 1 10); do bash scripts/backup.sh; done
+          test "$(find backups -name 'backup-*.db' | wc -l)" -eq 7
+          newest=$(ls -t backups/backup-*.db | head -1)
+          docker compose stop api nginx
+          docker compose run --rm -T --no-deps -v "$PWD/backups:/backup:ro" api python -c "import sqlite3; src=sqlite3.connect('file:/backup/$(basename "$newest")?mode=ro',uri=True); dst=sqlite3.connect('/var/lib/identity/service.db'); src.backup(dst); assert dst.execute('PRAGMA integrity_check').fetchone()[0]=='ok'; assert dst.execute('SELECT count(*) FROM cases').fetchone()[0]==43; dst.close(); src.close()"
+          docker compose up -d --wait
+          curl --fail http://localhost:8080/api/ready
       - name: Logs
         if: always()
         working-directory: q3_deploy

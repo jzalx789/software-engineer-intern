@@ -66,7 +66,7 @@ backup-20261012T123624-55245.db
 
 ### Container verification
 
-Docker is not installed on the local Mac. The provided GitHub Actions workflow runs pytest, `docker compose build`, health-dependent startup from its clean checkout, nginx configuration validation, the complete smoke workflow through nginx, `/ocr/online` routing, a 413 upload-size check, and an online container backup. Its actual final status must be recorded after execution; container commands have not yet been claimed as locally verified.
+Docker is not installed on the local Mac. The provided GitHub Actions workflow runs pytest, `docker compose build`, health-dependent startup from its clean checkout, nginx configuration validation, the complete smoke workflow through nginx, `/ocr/parse` routing, a 413 upload-size check, and an online container backup. The first run built containers and passed the full smoke test, but the additional routing check incorrectly requested `/ocr/online` (the mock health path is `/online`). That check was corrected to POST the documented `/ocr/parse` with an unreadable image and require its 422 reason. The next run also checks seven-backup retention, stopped-service restoration, and readiness after restart. Final workflow status is pending; container commands have not been claimed as locally verified.
 
 ## 4. AI-generated code requiring further review
 
