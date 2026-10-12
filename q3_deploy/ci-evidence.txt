@@ -1,0 +1,88 @@
+Successful workflow: https://github.com/jzalx789/software-engineer-intern/actions/runs/38251081158
+Verified commit: ef6873ac59e3175ba3a41f5b290e5c6f40b096cd
+Job conclusion: success
+Checks: 19 pytest tests, Docker build/start, nginx config, complete smoke, OCR route, 413 limit, ten online backups retained as seven, stopped-service restore with 43 cases and integrity ok, readiness after restart.
+
+SMOKE TEST PASSED
+2026-10-12T12:47:09.8182984Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:10.0858584Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:10.0859650Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:10.3681410Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:10.3681929Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:10.3682323Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:10.6403166Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:10.6403634Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:10.6404012Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:10.6404374Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:10.9093874Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:10.9094402Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:10.9094782Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:10.9095149Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:10.9095511Z backups/backup-20261012T124710-4118.db
+2026-10-12T12:47:11.1806432Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:11.1807366Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:11.1807897Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:11.1808394Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:11.1809153Z backups/backup-20261012T124710-4118.db
+2026-10-12T12:47:11.1809649Z backups/backup-20261012T124710-4178.db
+2026-10-12T12:47:11.4482456Z backups/backup-20261012T124709-3873.db
+2026-10-12T12:47:11.4483288Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:11.4483821Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:11.4484477Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:11.4484923Z backups/backup-20261012T124710-4118.db
+2026-10-12T12:47:11.4485610Z backups/backup-20261012T124710-4178.db
+2026-10-12T12:47:11.4486142Z backups/backup-20261012T124711-4238.db
+2026-10-12T12:47:11.7173406Z backups/backup-20261012T124709-3933.db
+2026-10-12T12:47:11.7174081Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:11.7174664Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:11.7175264Z backups/backup-20261012T124710-4118.db
+2026-10-12T12:47:11.7175837Z backups/backup-20261012T124710-4178.db
+2026-10-12T12:47:11.7176396Z backups/backup-20261012T124711-4238.db
+2026-10-12T12:47:11.7176937Z backups/backup-20261012T124711-4299.db
+2026-10-12T12:47:11.9892928Z backups/backup-20261012T124710-3995.db
+2026-10-12T12:47:11.9893627Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:11.9894211Z backups/backup-20261012T124710-4118.db
+2026-10-12T12:47:11.9894785Z backups/backup-20261012T124710-4178.db
+2026-10-12T12:47:11.9895385Z backups/backup-20261012T124711-4238.db
+2026-10-12T12:47:11.9896012Z backups/backup-20261012T124711-4299.db
+2026-10-12T12:47:11.9896590Z backups/backup-20261012T124711-4360.db
+2026-10-12T12:47:12.3104253Z backups/backup-20261012T124710-4057.db
+2026-10-12T12:47:12.3104711Z backups/backup-20261012T124710-4118.db
+2026-10-12T12:47:12.3105082Z backups/backup-20261012T124710-4178.db
+2026-10-12T12:47:12.3105439Z backups/backup-20261012T124711-4238.db
+2026-10-12T12:47:12.3105809Z backups/backup-20261012T124711-4299.db
+2026-10-12T12:47:12.3106163Z backups/backup-20261012T124711-4360.db
+2026-10-12T12:47:12.3106512Z backups/backup-20261012T124711-4420.db
+2026-10-12T12:47:12.3854750Z  Container q3_deploy-nginx-1  Stopping
+2026-10-12T12:47:12.4969135Z  Container q3_deploy-nginx-1  Stopped
+2026-10-12T12:47:12.4971216Z  Container q3_deploy-api-1  Stopping
+2026-10-12T12:47:12.7344077Z  Container q3_deploy-api-1  Stopped
+2026-10-12T12:47:13.1292862Z  Container q3_deploy-mock_onboarding-1  Running
+2026-10-12T12:47:13.1293567Z  Container q3_deploy-mock_ocr-1  Running
+2026-10-12T12:47:13.1303045Z  Container q3_deploy-mock_ocr-1  Waiting
+2026-10-12T12:47:13.1303609Z  Container q3_deploy-mock_onboarding-1  Waiting
+2026-10-12T12:47:13.6325791Z  Container q3_deploy-mock_onboarding-1  Healthy
+2026-10-12T12:47:13.6326265Z  Container q3_deploy-mock_ocr-1  Healthy
+2026-10-12T12:47:13.6326626Z  Container q3_deploy-api-1  Starting
+2026-10-12T12:47:13.7427741Z  Container q3_deploy-api-1  Started
+2026-10-12T12:47:13.7428802Z  Container q3_deploy-api-1  Waiting
+2026-10-12T12:47:13.7429725Z  Container q3_deploy-mock_ocr-1  Waiting
+2026-10-12T12:47:14.2441575Z  Container q3_deploy-mock_ocr-1  Healthy
+2026-10-12T12:47:19.2446415Z  Container q3_deploy-api-1  Healthy
+2026-10-12T12:47:19.2446925Z  Container q3_deploy-nginx-1  Starting
+2026-10-12T12:47:19.3705108Z  Container q3_deploy-nginx-1  Started
+2026-10-12T12:47:19.3705752Z  Container q3_deploy-mock_onboarding-1  Waiting
+2026-10-12T12:47:19.3706334Z  Container q3_deploy-nginx-1  Waiting
+2026-10-12T12:47:19.3706869Z  Container q3_deploy-api-1  Waiting
+2026-10-12T12:47:19.3707384Z  Container q3_deploy-mock_ocr-1  Waiting
+2026-10-12T12:47:19.8723064Z  Container q3_deploy-mock_onboarding-1  Healthy
+2026-10-12T12:47:19.8723880Z  Container q3_deploy-api-1  Healthy
+2026-10-12T12:47:19.8730514Z  Container q3_deploy-mock_ocr-1  Healthy
+2026-10-12T12:47:24.8724505Z  Container q3_deploy-nginx-1  Healthy
+2026-10-12T12:47:24.8813131Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2026-10-12T12:47:24.8814223Z                                  Dload  Upload   Total   Spent    Left  Speed
+2026-10-12T12:47:24.8814710Z 
+2026-10-12T12:47:24.8841587Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2026-10-12T12:47:24.8844316Z 100    14  100    14    0     0   4819      0 --:--:-- --:--:-- --:--:--  7000
+2026-10-12T12:47:24.8852575Z {"ready":true}
+2026-10-12T12:47:24.8893432Z 
