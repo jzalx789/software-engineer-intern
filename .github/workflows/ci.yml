@@ -32,7 +32,7 @@ jobs:
           test "$(find backups -name 'backup-*.db' | wc -l)" -eq 7
           newest=$(ls -t backups/backup-*.db | head -1)
           docker compose stop api nginx
-          docker compose run --rm -T --no-deps -v "$PWD/backups:/backup:ro" api python -c "import sqlite3; src=sqlite3.connect('file:/backup/$(basename "$newest")?mode=ro',uri=True); dst=sqlite3.connect('/var/lib/identity/service.db'); src.backup(dst); assert dst.execute('PRAGMA integrity_check').fetchone()[0]=='ok'; assert dst.execute('SELECT count(*) FROM cases').fetchone()[0]==43; dst.close(); src.close()"
+          docker compose run --rm -T --no-deps -v "$PWD/backups:/backup:ro" api python -c "import sqlite3; src=sqlite3.connect('file:/backup/$(basename "$newest")?mode=ro&immutable=1',uri=True); dst=sqlite3.connect('/var/lib/identity/service.db'); src.backup(dst); assert dst.execute('PRAGMA integrity_check').fetchone()[0]=='ok'; assert dst.execute('SELECT count(*) FROM cases').fetchone()[0]==43; dst.close(); src.close()"
           docker compose up -d --wait
           curl --fail http://localhost:8080/api/ready
       - name: Logs

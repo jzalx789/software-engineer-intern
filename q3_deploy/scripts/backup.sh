@@ -16,6 +16,7 @@ with tempfile.TemporaryDirectory() as directory:
     path = Path(directory) / 'backup.db'
     destination = sqlite3.connect(path)
     source.backup(destination)
+    destination.execute('PRAGMA journal_mode=DELETE')  # Standalone snapshot, no WAL sidecars.
     assert destination.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
     destination.close()
     source.close()
