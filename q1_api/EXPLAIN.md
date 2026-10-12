@@ -1,0 +1,12 @@
+# Code walkthrough
+
+1. **Import:** `main.import_batch` receives multipart CSV bytes, `validation.validate_csv` validates rows, and a transaction inserts one batch plus only valid cases. Bad rows are recorded in the batch rather than inserted as cases. Duplicate references are scoped to one upload.
+2. **Storage:** `db.connect` opens a SQLite connection per operation, commits on success and rolls back on exceptions. `BEGIN IMMEDIATE` serializes review and export writes. Original CSV metadata is separate from OCR `parsed_fields`.
+3. **Review:** `states.TRANSITIONS` maps `(current_status, stage, decision)` to a target. Missing entries raise a reason mapped to HTTP 409. To add a review path, change the table, status list and relevant tests; consider what exports should now exclude.
+4. **OCR:** `/process` schedules one asynchronous task per batch. Sequential HTTP calls retry transient errors with backoff and explicit timeouts. A case remains pending until its terminal outcome is committed; after a killed process, calling `/process` replays unfinished work safely because parsing has no side effects. Completed cases are skipped. Staff can explicitly retry failed cases.
+5. **Export:** Select only stage-2 approvals, generate bytes, store those bytes/key and mark cases exported atomically. Network delivery happens after commit. An export worker retries the same bytes with the same key and stores a hash-checked receipt. Repeated export calls cannot select previously exported cases. Export status and delivery status have separate meanings.
+6. **Recovery:** OCR restarts use pending rows; export restarts use persisted, undelivered exports. The in-memory task map prevents duplicate local workers but is not a cross-process lock, so run one uvicorn worker.
+7. **Deployment:** nginx preserves `/api/` and `/ocr/` paths; mocks are only accessible inside the Compose network. Readiness checks the database, unlike liveness. Health dependencies replace startup sleeps. A named volume survives container replacement.
+8. **Backup:** SQLite's online backup API copies a consistent database including WAL data. Verify integrity before publishing the timestamped file, then retain seven. Stop writers before restoring; a restore cannot undo an already-ingested external submission.
+
+Tests prove selected behaviors, not the absence of every possible bug. Read `REFLECTION.md` for measured failure rates and known operational limits.

@@ -1,0 +1,31 @@
+{
+  "mode": "local, real uvicorn API remained running during backups",
+  "created": 10,
+  "retained": 7,
+  "before": [
+    "backup-20261012T123623-55155.db",
+    "backup-20261012T123623-55165.db",
+    "backup-20261012T123624-55175.db",
+    "backup-20261012T123624-55185.db",
+    "backup-20261012T123624-55195.db",
+    "backup-20261012T123624-55205.db",
+    "backup-20261012T123624-55215.db"
+  ],
+  "after": [
+    "backup-20261012T123624-55185.db",
+    "backup-20261012T123624-55195.db",
+    "backup-20261012T123624-55205.db",
+    "backup-20261012T123624-55215.db",
+    "backup-20261012T123624-55225.db",
+    "backup-20261012T123624-55235.db",
+    "backup-20261012T123624-55245.db"
+  ],
+  "deleted_oldest": [
+    "backup-20261012T123623-55155.db",
+    "backup-20261012T123623-55165.db",
+    "backup-20261012T123624-55175.db"
+  ],
+  "restore_integrity": "ok",
+  "restored_cases": 43,
+  "batch_id": "f1af089c-c5d1-4edc-9eb6-819525aa3da1"
+}

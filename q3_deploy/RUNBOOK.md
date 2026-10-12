@@ -1,28 +1,11 @@
-# Operations runbook template
+# Operations runbook
 
-Complete this template after implementing Module 3. Replace bracketed prompts with tested commands and observed results. Remove these instructions before submission. Run deployment commands from `q3_deploy/` unless a step specifies another directory.
+**Startup:** From `q3_deploy/`, run `cp .env.example .env` then `docker compose up --build -d --wait`. Defaults use deterministic seeds (OCR 42, onboarding 7), with injected failures enabled. Run `curl -f http://localhost:8080/api/ready`, then `bash scripts/smoke_test.sh`. Python 3.10+ on the host is required for the scripts. `/api/health` is liveness; `/api/ready` verifies the database schema is reachable. SQLite persists in `identity_data`; do not use `docker compose down -v` on data you need. The API must use **one worker**: in-process task ownership does not coordinate multiple processes. Compose wires database/service paths; `.env` controls timeouts, retry count, seeds, rates and the external port.
 
-## Start the system
+**Logs:** `docker compose ps` and `docker compose logs --tail=100 api mock_ocr mock_onboarding nginx`. The API logs OCR outcomes and retries, without logging applicant fields. Mocks intentionally delay some responses; a timed-out client can cause a mock BrokenPipe trace when that response eventually arrives.
 
-1. Copy `.env.example` to `.env` and set [required configuration values].
-2. Run `docker compose up --build`.
-3. Check [readiness command]. Expected result: [ready response after the database is reachable].
-4. Run `bash scripts/smoke_test.sh` in another terminal. Expected result: [successful batch delivery and recorded receipt].
+**OCR diagnosis:** `GET /api/batches/{id}` shows progress and `processing`. Query `/api/batches/{id}/cases?status=ocr_failed` for reasons. Inspect `docker compose exec -T api python -c "import urllib.request; print(urllib.request.urlopen('http://mock_ocr:9100/debug/requests').read().decode())"`. Unreadable scans require corrected input. For temporary/exhausted failures, fix service availability then `POST /api/batches/{id}/process?retry_failed=true`. After a worker crash, call `/process` again: unfinished cases remain `pending`. A failed export is visible in batch `exports`; retry `POST /api/exports/{export_id}/deliver`. Never change its idempotency key. Mock deduplication is memory-only: if the onboarding mock restarts after ingestion, an unknown delivery requires staff investigation before resubmission.
 
-## Read logs
+**Backup/restore:** While running, `bash scripts/backup.sh` creates an integrity-checked SQLite online backup in `backups/` and retains seven. Restore with the API stopped: `docker compose stop api nginx`; select a backup, then `docker compose run --rm -T --no-deps -v "$PWD/backups:/backup:ro" api python -c "import sqlite3; src=sqlite3.connect('file:/backup/BACKUP_FILENAME.db?mode=ro',uri=True); dst=sqlite3.connect('/var/lib/identity/service.db'); src.backup(dst); print(dst.execute('PRAGMA integrity_check').fetchone()); dst.close(); src.close()"`; restart with `docker compose up -d --wait` and check `/api/ready`. Replace `BACKUP_FILENAME.db` with the chosen filename. Preserve onboarding receipts while restoring: database restoration cannot undo external ingestion.
 
-Run `docker compose logs --tail=100 api mock_ocr mock_onboarding nginx` to inspect recent service logs. Add `-f` to follow new output.
-
-[Record database log access if a separate database service is used. Identify the log fields or messages used to trace a case or export.]
-
-## Diagnose OCR failures
-
-1. Run [command to check the OCR service's `/online` endpoint]. Expected response: `{"online": true}`.
-2. Inspect `docker compose logs --tail=100 mock_ocr api` and [command to inspect failed case reasons].
-3. Use [recovery command] when the OCR service is unavailable. Use [case recovery action] for timeouts or exhausted retries. An unreadable scan requires a corrected image before processing again.
-
-## Restore a backup
-
-1. Select [backup path] and run [command to stop database writes before restoration].
-2. Run [restore command for the chosen database].
-3. Run [restart command], then [readiness and restored-data checks]. Expected result: [database reachable and selected backup data present].
+Verification status and evidence are in `../REFLECTION.md`. Local API/mock and backup/restore checks have separate evidence from container checks.

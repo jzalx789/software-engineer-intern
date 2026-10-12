@@ -1,47 +1,81 @@
 # Implementation reflection
 
-Complete each section before submission. Replace bracketed prompts with decisions, measurements, or evidence. Use `Not completed` or `Not measured` where applicable, and explain the gap. Reviewers assess this record alongside the code.
-
 ## 1. Design decisions
 
 | Decision | Rationale |
 |---|---|
-| Database | [Name the database and explain the choice.] |
-| Background OCR processing | [Describe how work is scheduled and how interrupted cases are processed again. Explain the approach.] |
-| Review state machine | [Identify the module that owns transition rules and explain the organization.] |
-| Delivery idempotency key | [Identify the source of the key. Explain why retries reuse it and different exports receive different keys.] |
+| Database | SQLite, accepted by the exercise. Transactions fit a small, single-process batch service, avoid an extra database service, and make clean local startup simple. WAL permits reads during writes; each operation opens/closes its own connection. A Docker named volume persists the file. |
+| CSV import | Multipart field `file`; no arbitrary server file paths. Validate headers, required values, synthetic ID prefix, calendar dates, chronology and duplicate references. Sample: 43 accepted, 7 rejected. Errors include CSV row numbers. |
+| Background OCR | One asyncio task per batch, sequential cases, one uvicorn worker. `/process` returns 202 without waiting. Successful/failed results commit per case; unfinished work stays `pending`, avoiding a stranded intermediate state. Active-task ownership is in memory; after a crash, staff call `/process` again. No Celery/queue is needed for the exercise scale. Multiple API processes are not supported. |
+| Review state machine | `q1_api/app/states.py` owns the review transition table. Invalid transitions return 409. SQLite `BEGIN IMMEDIATE` serializes competing decisions. Rejections at either stage are terminal. |
+| Export/delivery | Persist CSV bytes and mark selected stage-2 approvals exported in one transaction, before calling onboarding. The key is SHA-256 of a unique export filename, a separator, and the exact CSV bytes. Retries reuse persisted bytes/key; a new export has a new filename and key. A lost response can therefore recover the original receipt. Exporting and delivering are distinct states: staff can inspect and retry a failed delivery without re-exporting the cases. |
 
 ## 2. Mock observations and retry configuration
 
+Live evidence was obtained with unmodified mocks, seeded OCR 42/onboarding 7, configured OCR 500/hang probabilities 20%/10%, original hang durations 600/120 seconds. `q2_integration/verify.py` starts isolated localhost services, sends the actual CSV, and reads `/debug/requests` and `/debug/deliveries`. No failures were disabled.
+
 | Item | Measurement or decision |
 |---|---|
-| Observed OCR failure rates | [Record attempt counts and outcome rates. Describe the measurement method and test configuration.] |
-| OCR timeout | [Record the timeout in seconds and explain the value using observations.] |
-| Retry limit | [Record the attempt limit and backoff behavior.] |
-| Exhausted retries | [Describe the stored status and reason, how staff find failed cases, and the next operational action.] |
+| Observed OCR outcomes | Clean run: 66 recorded requests, 37 `ok` (56.06%), 14 `error_500` (21.21%), 10 `hang` (15.15%), 5 `unreadable` (7.58%). Among 61 readable attempts, 500/hang rates were 22.95%/16.39%. These are observed request rates, not configured probabilities or final case failure rates. |
+| Final case outcomes | 43 valid cases: 37 `ocr_done`, 6 `ocr_failed`. Five unreadable cases (11.63% of accepted cases) and one exhausted transient sequence, APPL-2026-0038. The separate smoke batch completed with 38 done and 5 unreadable failures because the random request sequence continued. |
+| Timeouts | HTTP read/connect defaults 2s/1s. Initial contract probes: normal OCR 200 about 45ms, unreadable 422 about 19ms, onboarding lost response timed out at 2.015s; retry recovered a receipt in about 33ms. Two seconds provides substantial local-response margin while bounding injected 600s/120s delays. This is mock-specific, not a production latency claim. |
+| Retry limit | 5 total HTTP attempts; exponential pauses 0.2, 0.4, 0.8, 1.6 seconds. Retry transport/timeouts, 5xx and 429. Do not retry 422/400. Every case commits success or failure; a process crash leaves uncommitted cases pending. |
+| Staff-visible failure | `ocr_failed` with vendor reason or `Retries exhausted after 5 attempts`. List using the status filter. Replace unreadable input in a new batch. For temporary failures, restore the upstream then invoke `/process?retry_failed=true`. Staff cannot review failed cases. |
 
 ## 3. Verification evidence
 
-Provide command output, excerpts, or links to artifacts for each check.
+### Tests and live local workflow
+
+`python -m pytest q1_api/`: 19 passed on Python 3.13.1. One third-party Starlette/AnyIO deprecation warning remains; it does not indicate test failure. The tests cover CSV rejection counts/reasons, review lifecycle and terminal rejections, six invalid transitions, OCR retry exhaustion, explicit staff retries, export exclusion/unique keys, lost receipts, durable export recovery, and readiness failure with a live API.
+
+The actual API and both mocks also ran without Docker. `q2_integration/evidence/clean.json` contains the smoke output, ending `SMOKE TEST PASSED`: 43 accepted, 7 rejected, 38 OCR successes reviewed through both stages, 38 exported, receipt hash matched downloaded bytes, and a repeated export created no new file. `/process` returned in about 0.002 seconds.
 
 ### OCR recovery
 
-[Include `/debug/requests` records and a final-state comparison between a clean run and a run interrupted by a worker termination, then processed again. State the result.]
+The API was killed with SIGKILL while `/debug/requests` showed a `hang`; the mock and database were retained. After restart there were 42 pending cases and one committed OCR success. Calling `/process` again completed the remaining work. `evidence/comparison.json` records `identical: true`, comparing the final status and parsed fields for all 43 cases. `clean.json` and `interrupted.json` retain the raw request records. One case exhausted its bounded retry limit in both runs; this is disclosed rather than counted as OCR success.
 
 ### Account-opening submission
 
-[Include `/debug/deliveries` records showing exactly one ingestion per export, including delivery retries after a lost response.]
+Clean export receipt `DLV-0001`: 37 cases, exactly one `/debug/deliveries` record, `attempts: 2`, and recovered response `deduplicated: true`. Seed 7 delays the first receipt after ingestion; the retry used the same persisted key and returned the original receipt. Complete keys/hashes/records are in `evidence/clean.json`. No duplicate ingestion occurred. A later export with no approvals returned `created_export_id: null`.
 
 ### Backup retention
 
-[Include before-and-after file listings showing that only the seven most recent backups remain.]
+Online local verification kept a real uvicorn API running while creating 10 SQLite backups. Only the seven most recent remained. Restoring the newest backup returned `PRAGMA integrity_check = ok` and 43 cases. `q3_deploy/backup-evidence.json` contains the full evidence. Before the final three backups:
+
+```text
+backup-20261012T123623-55155.db
+backup-20261012T123623-55165.db
+backup-20261012T123624-55175.db
+backup-20261012T123624-55185.db
+backup-20261012T123624-55195.db
+backup-20261012T123624-55205.db
+backup-20261012T123624-55215.db
+```
+
+After:
+
+```text
+backup-20261012T123624-55185.db
+backup-20261012T123624-55195.db
+backup-20261012T123624-55205.db
+backup-20261012T123624-55215.db
+backup-20261012T123624-55225.db
+backup-20261012T123624-55235.db
+backup-20261012T123624-55245.db
+```
+
+### Container verification
+
+Docker is not installed on the local Mac. The provided GitHub Actions workflow runs pytest, `docker compose build`, health-dependent startup from its clean checkout, nginx configuration validation, the complete smoke workflow through nginx, `/ocr/online` routing, a 413 upload-size check, and an online container backup. Its actual final status must be recorded after execution; container commands have not yet been claimed as locally verified.
 
 ## 4. AI-generated code requiring further review
 
-[Identify AI-generated code you do not fully understand. Include file paths, the behavior in question, and the review still needed. Enter `None` if applicable.]
+Codex materially assisted application code, tests, integration verification, deployment files, and documentation. The candidate stated that they understand the code; this statement has not been independently assessed. The candidate will complete the retained `AI_LOG.md` template before submission. A short architecture guide is in `q1_api/EXPLAIN.md`.
 
-The assessment values accurate disclosure. The requirement to explain submitted code during the interview remains in effect.
+## 5. Incomplete work and limitations
 
-## 5. Incomplete work and next steps
-
-[List unfinished requirements, known failures, and their effect on the workflow. Describe what you would address with one additional day.]
+- `AI_LOG.md` is intentionally left for the candidate to complete; the submission documentation is incomplete until then.
+- Container verification is pending the real workflow result. The Mac cannot perform local Docker startup without a Docker engine.
+- Background-task ownership assumes one API process. With another day, use a durable queue/lease for multiple workers and add authenticated staff accounts; these are beyond the required mock exercise.
+- Both mock debug/deduplication stores are in memory. A mock-onboarding restart erases its keys. An unknown external outcome across that restart requires operational reconciliation, not blind redelivery.
+- No recruitment submission email has been sent. The recipient/address and final approved documentation must be available before submission.
