@@ -8,4 +8,4 @@
 | VS Code | Local editing and test execution. | q1_api/app/validation.py, q1_api/tests/test_app.py |
 | GitHub | Public fork and publishing module commits; Actions for container validation. | Repository and CI workflow |
 
-`AI_LOG.md` is left for the candidate to complete before submission.
+The assistance scope, adopted output, and revisions are recorded in `AI_LOG.md`.

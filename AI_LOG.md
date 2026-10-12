@@ -1,10 +1,6 @@
 # AI interaction record
 
-Record interactions that influenced architecture, implementation decisions, or generated code. Include prompt excerpts, conversation links, or exported records. Routine lookups do not require entries.
-
-Complete one entry per relevant interaction using the template below. Replace bracketed prompts and add entries as needed. If AI did not materially influence the code, state that and remove the blank entry.
-
-## Interaction 1: [Topic]
+## Interaction 1: Implementation, testing, and deployment support
 
 | Field | Description |
 |---|---|
@@ -14,8 +10,8 @@ Complete one entry per relevant interaction using the template below. Replace br
 
 ### Adopted output
 
-[Describe the suggestion or generated code included in the implementation.]
+AI-assisted code and revisions were incorporated into the FastAPI application, SQLite persistence layer, CSV validation, review transition table, background OCR worker, retry handling, durable exports, and idempotent delivery logic. Assistance also produced automated tests, a live-mock recovery verification script, Docker Compose and nginx configuration, backup and smoke-test scripts, CI, and supporting documentation. Selected Q1 validation and review behavior was explained through an interactive walkthrough; the candidate edited and ran tests during that walkthrough.
 
 ### Changes and rejected output
 
-[Describe what you changed or rejected and explain why. Enter `None` if applicable.]
+The implementation used SQLite, which the exercise explicitly accepts, to keep local startup and transaction handling simple. Background OCR was limited to one API process with sequential case processing; this limitation is documented rather than implying multi-worker support. Temporary diagnostic prints used during the walkthrough were removed from the application. Verification exposed two deployment issues that were corrected: the CI routing probe used an undocumented OCR health path, and read-only restoration of WAL-mode snapshots could require sidecar files. The probe now uses the documented parse endpoint; backups use DELETE journal mode and static restore sources use immutable reads. Observed retry exhaustion was retained as a recorded failure rather than reported as OCR success. AI_LOG wording and the affected-file list were edited by the candidate before the remaining record sections were completed with AI assistance.

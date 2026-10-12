@@ -70,11 +70,10 @@ Docker is not installed on the local Mac. The provided GitHub Actions workflow r
 
 ## 4. AI-generated code requiring further review
 
-Codex materially assisted application code, tests, integration verification, deployment files, and documentation. The candidate stated that they understand the code; this statement has not been independently assessed. The candidate will complete the retained `AI_LOG.md` template before submission. A short architecture guide is in `q1_api/EXPLAIN.md`.
+Codex materially assisted application code, tests, integration verification, deployment files, and documentation. The candidate stated that they understand the code; this statement has not been independently assessed. `AI_LOG.md` records the assistance scope, adopted implementation, and revisions; the candidate edited the prompt summary and affected-file list, and authorized completion of the remaining sections. A short architecture guide is in `q1_api/EXPLAIN.md`.
 
 ## 5. Incomplete work and limitations
 
-- `AI_LOG.md` is intentionally left for the candidate to complete; the submission documentation is incomplete until then.
 - Container deployment and restore passed in GitHub Actions from a clean checkout. The Mac cannot perform local Docker startup without a Docker engine; use the tested runbook on a Docker-enabled machine.
 - Background-task ownership assumes one API process. With another day, use a durable queue/lease for multiple workers and add authenticated staff accounts; these are beyond the required mock exercise.
 - Both mock debug/deduplication stores are in memory. A mock-onboarding restart erases its keys. An unknown external outcome across that restart requires operational reconciliation, not blind redelivery.
